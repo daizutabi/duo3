@@ -1,0 +1,84 @@
+#:kivy 2.0.0
+
+<SentenceLayout>:
+    step: step
+    section: section
+    no: no
+    past: past
+    previous: previous
+    deduction: deduction
+    bar: bar
+    japanese: japanese
+    english: english
+
+    orientation: 'vertical'
+
+    BoxLayout:
+        orientation: 'horizontal'
+        size_hint_y: None
+        height: 80
+        Label:
+            id: step
+            text: 'Step 0/0'
+            font_size: 24
+            font_name: 'Times'
+            bold: True
+        Label:
+            id: section
+            text: 'Section 0'
+            font_size: 24
+            font_name: 'Times'
+            bold: True
+        Label:
+            id: no
+            text: 'No. 0'
+            font_size: 24
+            font_name: 'Times'
+        Label:
+            id: past
+            text: 'Past 0/0'
+            font_size: 24
+            font_name: 'Times'
+        Label:
+            id: previous
+            text: 'Privous -'
+            font_size: 24
+            font_name: 'Times'
+        Label:
+            id: deduction
+            text: 'Deduction 0'
+            font_size: 24
+            font_name: 'Times'
+
+    ProgressBar:
+        id: bar
+        size_hint_y: None
+        height: 50
+
+    Label:
+        id: english
+        text_size: root.width, None
+        size: self.texture_size
+        font_size: 38
+        font_name: 'Times'
+        font_kerning: True
+
+    Label:
+        id: japanese
+        text_size: root.width, None
+        size: self.texture_size
+        font_size: 32
+
+
+<Duo3Widget>:
+    section_selector: section_selector
+    sentence_layout: sentence_layout
+    orientation: 'vertical'
+
+    padding: 30
+
+    SectionSelector:
+        id: section_selector
+
+    SentenceLayout:
+        id: sentence_layout

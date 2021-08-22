@@ -16,7 +16,7 @@
     BoxLayout:
         orientation: 'horizontal'
         size_hint_y: None
-        height: 80
+        height: 60
         Label:
             id: step
             text: 'Step 0/0'
@@ -41,7 +41,7 @@
             font_name: 'Times'
         Label:
             id: previous
-            text: 'Privous -'
+            text: 'Previous -'
             font_size: 24
             font_name: 'Times'
         Label:
@@ -53,25 +53,26 @@
     ProgressBar:
         id: bar
         size_hint_y: None
-        height: 50
+        height: 30
 
     Label:
         id: english
-        text_size: root.width, None
-        size: self.texture_size
+        text_size: root.width - 80, None
+        # size: self.texture_size
         font_size: 38
         font_name: 'Times'
         font_kerning: True
 
     Label:
         id: japanese
-        text_size: root.width, None
-        size: self.texture_size
+        text_size: root.width - 80, None
+        # size: self.texture_size
         font_size: 32
 
 
 <Duo3Widget>:
     section_selector: section_selector
+    sentence_selector: sentence_selector
     sentence_layout: sentence_layout
     orientation: 'vertical'
 
@@ -79,6 +80,9 @@
 
     SectionSelector:
         id: section_selector
+
+    SentenceSelector:
+        id: sentence_selector
 
     SentenceLayout:
         id: sentence_layout

@@ -58,7 +58,8 @@ class Sentence:
             self.cursor += 1
             return True
         elif self.english[self.cursor].lower() == key:
-            self.state[self.cursor] = abs(self.state[self.cursor]) + 1
+            s = self.state[self.cursor]
+            self.state[self.cursor] = 1 if s == 0 else abs(s)
             self.cursor += 1
             return True
         else:

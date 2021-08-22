@@ -26,6 +26,12 @@ class History:
         else:
             return []
 
+    def is_wrong(self, no: int) -> bool:
+        if history := self.get_by_list(no):
+            return history[-1] != 0
+        else:
+            return True
+
     def save(self):
         save(self.history)
 

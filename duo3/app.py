@@ -13,7 +13,7 @@ import duo3.audio
 import duo3.history
 import duo3.sentence
 from duo3.sentence import Sentence
-from duo3.uix import SectionSelector
+from duo3.uix import SectionSelector, SentenceSelector
 
 Window.size = (960, 880)
 
@@ -37,27 +37,15 @@ class SentenceLayout(BoxLayout):
     def start(self, sentences: list[Sentence], current: int, history: list[int]):
         self.step.text = f"Step {current+1}/{len(sentences)}"
         self.sentence = sentences[current]
-        self.section.text = f"Section {self.sentence.section}"
-        self.no.text = f"No. {self.sentence.no}"
-        if history:
-            correct = sum(1 for x in history if x == 0)
-            self.past.text = f"Past {correct}/{len(history)}"
-            self.previous.text = f"Previous {history[-1]}"
-            if history[-1] == 0:
-                self.previous.color = "33ff77"
-            else:
-                self.previous.color = self.color(history[-1])
-        else:
-            self.past.text = "Past 0/0"
-            self.previous.text = "Previous -"
-            self.previous.color = self.color(0)
-
+        self.display(self.sentence, history, False)
         self.bar.max = len(sentences)
         self.bar.value = current + 1
-        self.japanese.text = self.sentence.japanese + " " + self.sentence.english
-        self.audio = duo3.audio.read(self.sentence.no)
-        self.play()
         self.flush()
+
+    def finish(self):
+        self.japanese.text = ""
+        self.english.text = "Finished."
+        self.english.color = "33FF77"
 
     def play(self):
         if self.audio:
@@ -80,19 +68,48 @@ class SentenceLayout(BoxLayout):
         self.deduction.text = f"Deduction {self.sentence.deduction}"
         self.deduction.color = self.color()
 
-    def finish(self):
-        self.japanese.text = ""
-        self.english.text = "Finished."
-        self.english.color = "33FF77"
-
     def color(self, deduction: int | None = None):
         if deduction is None:
             deduction = self.sentence.deduction if self.sentence else 0
         return ["EEEEEE", "DDDD22", "DD8833", "DD3333"][min(deduction, 3)]
 
+    def display(self, sentence: Sentence, history: list[int], english: bool = False):
+        self.section.text = f"Section {sentence.section}"
+        self.no.text = f"No. {sentence.no}"
+        if history:
+            last = history[-1]
+            correct = sum(1 for x in history if x == 0)
+            self.past.text = f"Past {correct}/{len(history)}"
+            self.previous.text = f"Previous {last}"
+            if last == 0:
+                self.previous.color = "33ff77"
+            else:
+                self.previous.color = self.color(last)
+        else:
+            self.past.text = "Past 0/0"
+            self.previous.text = "Previous -"
+            self.previous.color = self.color(0)
+        if english:
+            self.english.text = sentence.english
+            self.english.color = "EEEEEE"
+        self.japanese.text = sentence.japanese
+        self.audio = duo3.audio.read(sentence.no)
+        self.play()
+
+    def clear(self):
+        self.section.text = "Section 0"
+        self.no.text = "No. 0"
+        self.past.text = "Past 0/0"
+        self.previous.text = "Previous -"
+        self.previous.color = self.color(0)
+        self.english.text = ""
+        self.japanese.text = ""
+        self.unload()
+
 
 class Duo3Widget(BoxLayout):
     section_selector: SectionSelector = ObjectProperty(None)
+    sentence_selector: SentenceSelector = ObjectProperty(None)
     sentence_layout: SentenceLayout = ObjectProperty(None)
 
     def __init__(self, **kwargs):
@@ -103,6 +120,11 @@ class Duo3Widget(BoxLayout):
         self.current: int = 0
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
+        for button in self.section_selector:
+            button.bind(state=self.section_changed)
+        for button in self.sentence_selector:
+            button.bind(state=self.sentence_changed)
+        self.update_section_selector()
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_keyboard_down)
@@ -110,9 +132,14 @@ class Duo3Widget(BoxLayout):
 
     def _on_keyboard_down(self, keyboard, keycode, text, modifiers):
         key = keycode[1]
-        if key == "enter":
+        if key == "escape" and self.problems:
+            self.finish()
+        elif key == "enter":
+            self.sentence_selector.unselect()
             if sections := self.section_selector.sections:
                 self.problems = self.sentences.sample(sections)
+                if ps := [p for p in self.problems if self.history.is_wrong(p.no)]:
+                    self.problems = ps
                 self.current = 0
                 self.start()
         elif key == "spacebar":
@@ -123,8 +150,7 @@ class Duo3Widget(BoxLayout):
                 self.sentence_layout.unload()
                 self.current += 1
                 if self.current == len(self.problems):
-                    self.sentence_layout.finish()
-                    self.problems.clear()
+                    self.finish()
                 else:
                     self.start()
             else:
@@ -141,6 +167,48 @@ class Duo3Widget(BoxLayout):
         problem = self.problems[self.current]
         history = self.history.get_by_list(problem.no)
         self.sentence_layout.start(self.problems, self.current, history)
+
+    def finish(self):
+        self.sentence_layout.finish()
+        duo3.audio.finish2.seek(0)
+        duo3.audio.finish2.play()
+        self.update_section_selector()
+        if self.problems:
+            self.update_sentence_selector(self.problems[0].section)
+        self.problems.clear()
+
+    def section_changed(self, button, value):
+        if value == "down":
+            self.update_sentence_selector(int(button.text))
+        elif value == "normal":
+            self.sentence_selector.clear()
+
+    def sentence_changed(self, button, value):
+        if value == "down" and button.text:
+            no = int(button.text)
+            history = self.history.get_by_list(no)
+            self.sentence_layout.display(self.sentences[no - 1], history, True)
+        elif value == "normal":
+            self.sentence_layout.clear()
+
+    def update_section_selector(self):
+        for button in self.section_selector:
+            no = int(button.text)
+            count = sum(self.history.is_wrong(i) for i in self.sentences.noiter(no))
+            if count == 0:
+                button.color = "33FF77"
+            else:
+                button.color = "EEEEEE"
+
+    def update_sentence_selector(self, section: int):
+        nos = sorted(self.sentences.noiter(section))
+        cs: list[str] = []
+        for no in nos:
+            if self.history.is_wrong(no):
+                cs.append("EEEEEE")
+            else:
+                cs.append("33FF77")
+        self.sentence_selector.set_sentence_numbers(nos, cs)
 
 
 class Duo3App(App):

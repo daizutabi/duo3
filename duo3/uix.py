@@ -19,9 +19,9 @@ class SectionSelector(GridLayout):
                 button = Label(
                     text="Section",
                     size_hint=(None, None),
-                    size=(80, self.height // 3),
-                    font_name="Times",
-                    font_size=20,
+                    size=(100, self.height // 3),
+                    # font_name="Times",
+                    font_size=18,
                 )
             elif s % 16 == 0:
                 button = self.control_button(s // 16 - 1)
@@ -31,8 +31,8 @@ class SectionSelector(GridLayout):
                     text=text,
                     size_hint_y=None,
                     height=height // 3,
-                    font_name="Times",
-                    font_size=20,
+                    # font_name="Times",
+                    font_size=18,
                     group="section_group",
                 )
             self.add_widget(button)
@@ -43,9 +43,9 @@ class SectionSelector(GridLayout):
         button = Button(
             text=text,
             size_hint=(None, None),
-            size=(80, self.height // 3),
-            font_name="Times",
-            font_size=20,
+            size=(100, self.height // 3),
+            # font_name="Times",
+            font_size=18,
         )
         button.on_release = on_release
         return button
@@ -87,9 +87,9 @@ class SentenceSelector(BoxLayout):
         label = Label(
             text="Sentence",
             size_hint=(None, None),
-            size=(80, self.height),
-            font_name="Times",
-            font_size=20,
+            size=(100, self.height),
+            # font_name="Times",
+            font_size=18,
         )
         self.add_widget(label)
         for s in range(17):
@@ -97,8 +97,8 @@ class SentenceSelector(BoxLayout):
                 text="",
                 size_hint_y=None,
                 height=height,
-                font_name="Times",
-                font_size=20,
+                # font_name="Times",
+                font_size=18,
                 group="sentence-group",
             )
             self.add_widget(button)

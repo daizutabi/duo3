@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-import japanize_kivy  # noqa
 from kivy.app import App
 from kivy.core.audio import Sound
+from kivy.core.text import DEFAULT_FONT, LabelBase
 from kivy.core.window import Window
 from kivy.properties import ObjectProperty
+from kivy.resources import resource_add_path
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.uix.progressbar import ProgressBar
@@ -14,6 +15,9 @@ import duo3.history
 import duo3.sentence
 from duo3.sentence import Sentence
 from duo3.uix import SectionSelector, SentenceSelector
+
+resource_add_path(r"C:\\WIndows\\Fonts")
+LabelBase.register(DEFAULT_FONT, "meiryo.ttc")
 
 Window.size = (960, 880)
 

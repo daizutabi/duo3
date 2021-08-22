@@ -32,6 +32,16 @@ class Sentence:
         self.cursor = 0
         self.is_finished()
 
+    def prompt(self) -> str:
+        text = ""
+        for k, s in enumerate(self.state):
+            if s <= 0:
+                text += "_"
+                break
+            else:
+                text += self.english[k]
+        return text
+
     def is_finished(self) -> bool:
         if self.cursor == len(self.state):
             return True

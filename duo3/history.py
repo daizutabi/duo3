@@ -20,6 +20,12 @@ class History:
     def get(self, *args):
         return self.history.get(*args)
 
+    def get_by_list(self, no: int) -> list[int]:
+        if history := self.get(no):
+            return [int(x) for x in history[1:]]
+        else:
+            return []
+
     def save(self):
         save(self.history)
 

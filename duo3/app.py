@@ -12,8 +12,8 @@ from kivy.uix.progressbar import ProgressBar
 import duo3.audio
 import duo3.history
 import duo3.sentence
-from duo3.section import SectionSelector
 from duo3.sentence import Sentence
+from duo3.uix import SectionSelector
 
 Window.size = (960, 880)
 
@@ -55,45 +55,40 @@ class SentenceLayout(BoxLayout):
         self.bar.max = len(sentences)
         self.bar.value = current + 1
         self.japanese.text = self.sentence.japanese + " " + self.sentence.english
+        self.audio = duo3.audio.read(self.sentence.no)
         self.play()
         self.flush()
 
     def play(self):
         if self.audio:
-            self.audio.unload()
-        self.audio = duo3.audio.read(self.sentence.no)
-        if self.audio:
             self.audio.seek(0)
             self.audio.play()
 
+    def unload(self):
+        if self.audio:
+            self.audio.unload()
+
     def flush(self):
-        text = ""
-        for k, s in enumerate(self.sentence.state):
-            if s <= 0:
-                text += "_"
-                break
-            else:
-                text += self.sentence.english[k]
-        self.english.text = text
+        self.english.text = self.sentence.prompt()
         if self.sentence.is_finished():
             if self.sentence.deduction == 0:
-                self.english.color = "33ff77"
+                self.english.color = "33FF77"
             else:
                 self.english.color = self.color()
         else:
-            self.english.color = "eeeeee"
+            self.english.color = "EEEEEE"
         self.deduction.text = f"Deduction {self.sentence.deduction}"
         self.deduction.color = self.color()
 
+    def finish(self):
+        self.japanese.text = ""
+        self.english.text = "Finished."
+        self.english.color = "33FF77"
+
     def color(self, deduction: int | None = None):
         if deduction is None:
-            if self.sentence:
-                deduction = min(self.sentence.deduction, 3)
-            else:
-                deduction = 0
-        else:
-            deduction = min(deduction, 3)
-        return ["eeeeee", "dddd22", "dd8833", "dd3333"][deduction]
+            deduction = self.sentence.deduction if self.sentence else 0
+        return ["EEEEEE", "DDDD22", "DD8833", "DD3333"][min(deduction, 3)]
 
 
 class Duo3Widget(BoxLayout):
@@ -125,14 +120,15 @@ class Duo3Widget(BoxLayout):
         elif self.problems:
             problem = self.problems[self.current]
             if problem.is_finished():
+                self.sentence_layout.unload()
                 self.current += 1
                 if self.current == len(self.problems):
-                    print("finished")
-                    self.problems = []
+                    self.sentence_layout.finish()
+                    self.problems.clear()
                 else:
                     self.start()
             else:
-                if not problem.input(keycode[1]) or keycode[1] == "tab":
+                if not problem.input(key) or key == "tab":
                     duo3.audio.ng.seek(0)
                     duo3.audio.ng.play()
                 if problem.is_finished():
@@ -143,11 +139,7 @@ class Duo3Widget(BoxLayout):
 
     def start(self):
         problem = self.problems[self.current]
-        history = self.history.get(problem.no)
-        if history:
-            history = [int(x) for x in history[1:]]
-        else:
-            history = []
+        history = self.history.get_by_list(problem.no)
         self.sentence_layout.start(self.problems, self.current, history)
 
 
